@@ -88,7 +88,7 @@ class _LoginWidgetState extends State<LoginWidget>
                         child: Image.asset(
                           'assets/images/Screenshot_2025-02-09_at_2.59.30_PM.jpeg',
                           width: double.infinity,
-                          height: 70.0,
+                          height: 60.0,
                           fit: BoxFit.cover,
                         ),
                       ),
