@@ -1,15 +1,21 @@
 import '/auth/firebase_auth/auth_util.dart';
+import '/backend/api_requests/api_calls.dart';
 import '/backend/backend.dart';
 import '/components/add_task_widget.dart';
 import '/components/task_widget.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/index.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'tasks_model.dart';
 export 'tasks_model.dart';
 
 class TasksWidget extends StatefulWidget {
   const TasksWidget({super.key});
+
+  static String routeName = 'tasks';
+  static String routePath = '/tasks';
 
   @override
   State<TasksWidget> createState() => _TasksWidgetState();
@@ -24,6 +30,31 @@ class _TasksWidgetState extends State<TasksWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, () => TasksModel());
+
+    // On page load action.
+    SchedulerBinding.instance.addPostFrameCallback((_) async {
+      _model.apiResult1ul = await ZenQuoteCall.call();
+
+      if ((_model.apiResult1ul?.succeeded ?? true)) {
+        _model.quote = ZenQuoteCall.randomQuote(
+          (_model.apiResult1ul?.jsonBody ?? ''),
+        );
+        safeSetState(() {});
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '',
+              style: TextStyle(
+                color: FlutterFlowTheme.of(context).primaryText,
+              ),
+            ),
+            duration: Duration(milliseconds: 4000),
+            backgroundColor: FlutterFlowTheme.of(context).secondary,
+          ),
+        );
+      }
+    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
   }
@@ -59,7 +90,7 @@ class _TasksWidgetState extends State<TasksWidget> {
                   },
                   child: Padding(
                     padding: MediaQuery.viewInsetsOf(context),
-                    child: const AddTaskWidget(),
+                    child: AddTaskWidget(),
                   ),
                 );
               },
@@ -85,108 +116,128 @@ class _TasksWidgetState extends State<TasksWidget> {
             ),
           ),
         ),
-        body: Align(
-          alignment: const AlignmentDirectional(0.0, 0.0),
-          child: Container(
-            width: 400.0,
-            decoration: const BoxDecoration(),
-            child: Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(0.0, 24.0, 0.0, 24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding:
-                        const EdgeInsetsDirectional.fromSTEB(24.0, 0.0, 0.0, 0.0),
-                    child: Text(
-                      'Tasks',
-                      style:
-                          FlutterFlowTheme.of(context).headlineMedium.override(
+        body: Stack(
+          children: [
+            Align(
+              alignment: AlignmentDirectional(0.0, 0.0),
+              child: Container(
+                width: 400.0,
+                decoration: BoxDecoration(),
+                child: Padding(
+                  padding: EdgeInsetsDirectional.fromSTEB(0.0, 24.0, 0.0, 24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding:
+                            EdgeInsetsDirectional.fromSTEB(24.0, 0.0, 0.0, 0.0),
+                        child: Text(
+                          'Tasks',
+                          style: FlutterFlowTheme.of(context)
+                              .headlineMedium
+                              .override(
                                 fontFamily: 'Inter',
                                 letterSpacing: 0.0,
                               ),
-                    ),
-                  ),
-                  Expanded(
-                    child: StreamBuilder<List<TasksRecord>>(
-                      stream: queryTasksRecord(
-                        queryBuilder: (tasksRecord) => tasksRecord
-                            .where(
-                              'user',
-                              isEqualTo: currentUserReference,
-                            )
-                            .where(
-                              'completed',
-                              isEqualTo: false,
-                            ),
+                        ),
                       ),
-                      builder: (context, snapshot) {
-                        // Customize what your widget looks like when it's loading.
-                        if (!snapshot.hasData) {
-                          return Center(
-                            child: SizedBox(
-                              width: 50.0,
-                              height: 50.0,
-                              child: CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  FlutterFlowTheme.of(context).primary,
+                      Expanded(
+                        child: StreamBuilder<List<TasksRecord>>(
+                          stream: queryTasksRecord(
+                            queryBuilder: (tasksRecord) => tasksRecord
+                                .where(
+                                  'user',
+                                  isEqualTo: currentUserReference,
+                                )
+                                .where(
+                                  'completed',
+                                  isEqualTo: false,
                                 ),
-                              ),
-                            ),
-                          );
-                        }
-                        List<TasksRecord> listViewTasksRecordList =
-                            snapshot.data!;
-
-                        return ListView.separated(
-                          padding: EdgeInsets.zero,
-                          scrollDirection: Axis.vertical,
-                          itemCount: listViewTasksRecordList.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 12.0),
-                          itemBuilder: (context, listViewIndex) {
-                            final listViewTasksRecord =
-                                listViewTasksRecordList[listViewIndex];
-                            return InkWell(
-                              splashColor: Colors.transparent,
-                              focusColor: Colors.transparent,
-                              hoverColor: Colors.transparent,
-                              highlightColor: Colors.transparent,
-                              onTap: () async {
-                                context.pushNamed(
-                                  'details',
-                                  queryParameters: {
-                                    'taskDoc': serializeParam(
-                                      listViewTasksRecord,
-                                      ParamType.Document,
+                          ),
+                          builder: (context, snapshot) {
+                            // Customize what your widget looks like when it's loading.
+                            if (!snapshot.hasData) {
+                              return Center(
+                                child: SizedBox(
+                                  width: 50.0,
+                                  height: 50.0,
+                                  child: CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      FlutterFlowTheme.of(context).primary,
                                     ),
-                                  }.withoutNulls,
-                                  extra: <String, dynamic>{
-                                    'taskDoc': listViewTasksRecord,
+                                  ),
+                                ),
+                              );
+                            }
+                            List<TasksRecord> listViewTasksRecordList =
+                                snapshot.data!;
+
+                            return ListView.separated(
+                              padding: EdgeInsets.zero,
+                              scrollDirection: Axis.vertical,
+                              itemCount: listViewTasksRecordList.length,
+                              separatorBuilder: (_, __) =>
+                                  SizedBox(height: 12.0),
+                              itemBuilder: (context, listViewIndex) {
+                                final listViewTasksRecord =
+                                    listViewTasksRecordList[listViewIndex];
+                                return InkWell(
+                                  splashColor: Colors.transparent,
+                                  focusColor: Colors.transparent,
+                                  hoverColor: Colors.transparent,
+                                  highlightColor: Colors.transparent,
+                                  onTap: () async {
+                                    context.pushNamed(
+                                      DetailsWidget.routeName,
+                                      queryParameters: {
+                                        'taskDoc': serializeParam(
+                                          listViewTasksRecord,
+                                          ParamType.Document,
+                                        ),
+                                      }.withoutNulls,
+                                      extra: <String, dynamic>{
+                                        'taskDoc': listViewTasksRecord,
+                                      },
+                                    );
                                   },
+                                  child: TaskWidget(
+                                    key: Key(
+                                        'Keyswi_${listViewIndex}_of_${listViewTasksRecordList.length}'),
+                                    tasksDoc: listViewTasksRecord,
+                                    checkAction: () async {
+                                      await listViewTasksRecord.reference
+                                          .update(createTasksRecordData(
+                                        completed: true,
+                                      ));
+                                    },
+                                  ),
                                 );
                               },
-                              child: TaskWidget(
-                                key: Key(
-                                    'Keyswi_${listViewIndex}_of_${listViewTasksRecordList.length}'),
-                                tasksDoc: listViewTasksRecord,
-                                checkAction: () async {
-                                  await listViewTasksRecord.reference
-                                      .update(createTasksRecordData(
-                                    completed: true,
-                                  ));
-                                },
-                              ),
                             );
                           },
-                        );
-                      },
-                    ),
+                        ),
+                      ),
+                    ].divide(SizedBox(height: 12.0)),
                   ),
-                ].divide(const SizedBox(height: 12.0)),
+                ),
               ),
             ),
-          ),
+            Align(
+              alignment: AlignmentDirectional(-0.05, 0.71),
+              child: Text(
+                valueOrDefault<String>(
+                  _model.quote,
+                  'none',
+                ),
+                style: FlutterFlowTheme.of(context).bodyMedium.override(
+                      fontFamily: 'Inter',
+                      fontSize: 20.0,
+                      letterSpacing: 0.0,
+                    ),
+              ),
+            ),
+          ],
         ),
       ),
     );
